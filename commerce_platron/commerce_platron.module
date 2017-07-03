@@ -2,6 +2,9 @@
 
 module_load_include('inc', 'commerce_platron', 'includes/commerce_platron.admin');
 include('CommercePlatronSignature.php');
+include('CommercePlatronOfdReceiptItem.php');
+include('CommercePlatronOfdReceiptRequest.php');
+
 /**
  * Implements hook_menu().
  */
@@ -98,8 +101,8 @@ function commerce_platron_redirect_form($form, &$form_state, $order, $payment_me
  */
 function commerce_platron_build_redirect_form($form, &$form_state, $order, $settings) {
 	// Choose a server to redirect.
-	$form['#action'] = 'https://platron.ru/payment.php';
-	//  $form['#method'] = 'GET';
+	// $form['#action'] = 'https://platron.ru/payment.php';
+	// $form['#method'] = 'GET';
 	$wrapper = entity_metadata_wrapper('commerce_order', $order);
 
 	$currency_code = $wrapper->commerce_order_total->currency_code->value();
@@ -143,6 +146,66 @@ function commerce_platron_build_redirect_form($form, &$form_state, $order, $sett
 		$arrFields['pg_user_email'] = $order->mail;
 		$arrFields['pg_user_contact_email'] = $order->mail;
 	}
+
+	$arrFields['pg_sig'] = CommercePlatronSignature::make('init_payment.php', $arrFields, $settings["secret_key"]);
+
+	$response = file_get_contents('https://www.platron.ru/init_payment.php?' . http_build_query($arrFields));
+	$responseElement = new SimpleXMLElement($response);
+
+	$checkResponse = CommercePlatronSignature::checkXML('init_payment.php', $responseElement, $settings["secret_key"]);
+
+	if ($checkResponse && (string)$responseElement->pg_status == 'ok') {
+
+   		if ( $settings["create_ofd_check"] == 1) {
+
+   			$paymentId = (string)$responseElement->pg_payment_id;
+
+   	        $ofdReceiptItems = array();
+
+			foreach ($wrapper->commerce_line_items as $delta => $line_item_wrapper) {
+
+       		    $ofdReceiptItem = new CommercePlatronOfdReceiptItem();
+
+				if (function_exists('commerce_product_line_item_types')) {
+					if (in_array($line_item_wrapper->type->value(), commerce_product_line_item_types())) {
+		   	            $ofdReceiptItem->vat = $settings["ofd_vat_type"];
+					} else {
+						// suppose it's Shipping
+		   	            $ofdReceiptItem->vat = '18'; // fixed;
+					}				
+				} else 
+					$ofdReceiptItem->vat = $settings["ofd_vat_type"];
+
+   	            $ofdReceiptItem->label = $line_item_wrapper->line_item_label->value();
+       		    $ofdReceiptItem->amount = round(commerce_currency_amount_to_decimal($line_item_wrapper->commerce_unit_price->amount->value(), $currency_code) * $line_item_wrapper->quantity->value(), 2);
+   	            $ofdReceiptItem->price  = round(commerce_currency_amount_to_decimal($line_item_wrapper->commerce_unit_price->amount->value(), $currency_code), 2);
+       		    $ofdReceiptItem->quantity = $line_item_wrapper->quantity->value();
+       		    $ofdReceiptItems[] = $ofdReceiptItem;
+
+			}
+
+			$ofdReceiptRequest = new CommercePlatronOfdReceiptRequest($settings["merchant_id"], $paymentId);
+			$ofdReceiptRequest->items = $ofdReceiptItems;
+			$ofdReceiptRequest->sign($settings["secret_key"]);
+
+			$responseOfd = file_get_contents('https://www.platron.ru/receipt.php?' . http_build_query($ofdReceiptRequest->requestArray()));
+			$responseElementOfd = new SimpleXMLElement($responseOfd);
+
+			if ((string)$responseElementOfd->pg_status != 'ok') {
+		
+				return commerce_platron_fail_msg('Platron check create error. ' . $responseElementOfd->pg_error_description);
+
+			}
+
+		}
+
+	} else {
+
+		return commerce_platron_fail_msg('Platron init payment error. ' . $responseElement->pg_error_description);
+
+	}
+
+	$form['#action'] = url((string)$responseElement->pg_redirect_url);
 
 	$arrFields['op'] = 'Pay via platron';
 	$arrFields['pg_sig'] = CommercePlatronSignature::make('payment.php', $arrFields, $settings["secret_key"]);
@@ -224,6 +287,18 @@ function commerce_platron_success() {
  */
 function commerce_platron_fail() {
 	drupal_set_message(t('Payment unsuccessful!'), 'error');
+	$build = array();
+	if ($message = commerce_platron_get_settings('fail_message'))
+		$build['message_fail']['#markup'] = $message;
+	
+	return $build;
+}
+
+/**
+ * Fail page with message.
+ */
+function commerce_platron_fail_msg($msg) {
+	drupal_set_message(t($msg), 'error');
 	$build = array();
 	if ($message = commerce_platron_get_settings('fail_message'))
 		$build['message_fail']['#markup'] = $message;

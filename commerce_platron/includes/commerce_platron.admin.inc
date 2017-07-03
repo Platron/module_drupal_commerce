@@ -15,6 +15,8 @@ function commerce_platron_settings_form($settings = NULL) {
 		'description'		=> 'Description',
 		'success_message'	=> 'Thank you for payment',
 		'fail_message'		=> 'Payment failed',
+		'create_ofd_check'	=> '0',
+		'ofd_vat_type'		=> '',
 	);
 
 	$form['merchant_id'] = array(
@@ -72,6 +74,29 @@ function commerce_platron_settings_form($settings = NULL) {
 		'#title' => t('Fail message'),
 		'#description' => t('Enter optional text that will be displayed when payment fail'),
 		'#default_value' => $settings['fail_message'],
+	);
+
+	$form['create_ofd_check'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Create check for OFD'),
+		'#description' => t('Should system send check to OFD'),
+		'#default_value' => $settings['create_ofd_check'],
+	);
+
+	$options = array(
+                  '0' => '0%',
+                  '10' => '10%',
+                  '18' => '18%',
+                  '110' => '10/110',
+                  '118' => '18/118'
+	);
+
+	$form['ofd_vat_type'] = array(
+	    '#type' => 'select',
+    	'#title' => t('VAT type for OFD'),
+	    '#description' => t('Specify the VAT type for items.'),
+	    '#options' => $options,
+		'#default_value' => $settings['ofd_vat_type'],
 	);
 
 	$form['#submit'][] = variable_set('commerce_platron_settings', $form);
