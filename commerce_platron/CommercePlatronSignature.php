@@ -36,8 +36,7 @@ class CommercePlatronSignature {
 	 */
 	public static function make ( $strScriptName, $arrParams, $strSecretKey )
 	{
-		$arrFlatParams = self::makeFlatParamsArray($arrParams);
-		return md5( self::makeSigStr($strScriptName, $arrFlatParams, $strSecretKey) );
+		return md5( self::makeSigStr($strScriptName, $arrParams, $strSecretKey) );
 	}
 
 	/**
@@ -67,7 +66,7 @@ class CommercePlatronSignature {
 	}
 
 
-	private static function makeSigStr ( $strScriptName, array $arrParams, $strSecretKey ) {
+	private static function makeSigStr ( $strScriptName, $arrParams, $strSecretKey ) {
 		unset($arrParams['pg_sig']);
 		
 		ksort($arrParams);
@@ -75,8 +74,26 @@ class CommercePlatronSignature {
 		array_unshift($arrParams, $strScriptName);
 		array_push   ($arrParams, $strSecretKey);
 
-		return join(';', $arrParams);
+		return self::arJoin($arrParams);
 	}
+
+	private static function arJoin ($in) {
+		return rtrim(self::arJoinProcess($in, ''), ';');
+	}
+
+	private static function arJoinProcess ($in, $str) {
+		if (is_array($in)) {
+			ksort($in);
+			$s = '';
+			foreach($in as $v) {
+				$s .= self::arJoinProcess($v, $str);
+			}
+			return $s;
+		} else {
+			return $str . $in . ';';
+		}
+	}
+
 	
 	private static function makeFlatParamsArray ( $arrParams, $parent_name = '' )
 	{
