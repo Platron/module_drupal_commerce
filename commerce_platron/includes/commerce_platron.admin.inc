@@ -88,7 +88,8 @@ function commerce_platron_settings_form($settings = NULL) {
                   '10' => '10%',
                   '18' => '18%',
                   '110' => '10/110',
-                  '118' => '18/118'
+                  '118' => '18/118',
+		  'none' => 'Не облагается',
 	);
 
 	$form['ofd_vat_type'] = array(
