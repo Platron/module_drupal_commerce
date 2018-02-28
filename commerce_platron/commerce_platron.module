@@ -72,8 +72,8 @@ function commerce_platron_submit_form($payment_method, $pane_values, $checkout_p
 	$build = array();
 	$text = theme('image', array(
 		'path' => $payment_method['settings']['logo_url'],
-		'alt' => $payment_method['settings']['name'],
-		'title' => $payment_method['settings']['name'],
+		'alt' => $payment_method['title'],
+		'title' => $payment_method['title'],
 		'attributes' => array('class' => 'logo-platron'),
 		));
 	$text .= '<div class="desc">' . $payment_method['settings']['description'] . '</div>';
@@ -131,7 +131,7 @@ function commerce_platron_build_redirect_form($form, &$form_state, $order, $sett
 		'pg_lifetime'			=> $nLifeTime,
 		'pg_testing_mode'		=> $settings["demo_mode"],
 		'pg_description'		=> $_SERVER['HTTP_HOST']." # ".$order->order_id,
-		'pg_user_ip'			=> $_SERVER['REMOTE_ADDR'],
+		//'pg_user_ip'			=> $_SERVER['REMOTE_ADDR'],
 		'pg_language'			=> $strLanguage,
 		'pg_check_url'			=> $strResultCheckUrl,
 		'pg_result_url'			=> $strResultCheckUrl,
