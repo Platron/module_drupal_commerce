@@ -131,7 +131,6 @@ function commerce_platron_build_redirect_form($form, &$form_state, $order, $sett
 		'pg_lifetime'			=> $nLifeTime,
 		'pg_testing_mode'		=> $settings["demo_mode"],
 		'pg_description'		=> $_SERVER['HTTP_HOST']." # ".$order->order_id,
-		//'pg_user_ip'			=> $_SERVER['REMOTE_ADDR'],
 		'pg_language'			=> $strLanguage,
 		'pg_check_url'			=> $strResultCheckUrl,
 		'pg_result_url'			=> $strResultCheckUrl,
