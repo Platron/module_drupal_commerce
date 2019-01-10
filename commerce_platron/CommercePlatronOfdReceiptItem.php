@@ -7,6 +7,7 @@ class CommercePlatronOfdReceiptItem
 	public $price;
 	public $quantity;
 	public $vat;
+	public $type;
 
 	public function toArray()
 	{
@@ -16,6 +17,7 @@ class CommercePlatronOfdReceiptItem
 			'pg_price' => $this->price,
 			'pg_quantity' => $this->quantity,
 			'pg_vat' => $this->vat,
+			'pg_type' => $this->type,
 		);
 	}
 }
