@@ -86,9 +86,9 @@ function commerce_platron_settings_form($settings = NULL) {
 	$options = array(
                   '0' => '0%',
                   '10' => '10%',
-                  '18' => '18%',
+                  '20' => '20%',
                   '110' => '10/110',
-                  '118' => '18/118',
+                  '120' => '20/120',
 		  'none' => 'Не облагается',
 	);
 
