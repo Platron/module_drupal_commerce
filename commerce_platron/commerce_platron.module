@@ -170,7 +170,8 @@ function commerce_platron_build_redirect_form($form, &$form_state, $order, $sett
 		   	            $ofdReceiptItem->vat = $settings["ofd_vat_type"];
 					} else {
 						// suppose it's Shipping
-		   	            $ofdReceiptItem->vat = $settings["ofd_vat_type"] == 'none'? 'none': 18;
+		   	            $ofdReceiptItem->vat = $settings["ofd_vat_type"] == 'none'? 'none': 20;
+				    $ofdReceiptItem->type = 'service';
 					}				
 				} else 
 					$ofdReceiptItem->vat = $settings["ofd_vat_type"];
